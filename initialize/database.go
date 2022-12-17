@@ -10,6 +10,7 @@ import (
 )
 
 func ConnectToDB() *gorm.DB {
+	fmt.Println("Connecting")
 	LoadInitializeEnv()
 	var err error
 	dsn := os.Getenv("DB_URL")
@@ -23,5 +24,6 @@ func ConnectToDB() *gorm.DB {
 	if err != nil {
 		panic(err.Error())
 	}
+	fmt.Println("Connected")
 	return db
 }
