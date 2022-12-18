@@ -9,71 +9,125 @@ import (
 	"gorm.io/datatypes"
 )
 
+type Task struct {
+	TitleTask string `json:"title_task" form:"TitleTask" binding:"required"`
+	DateTask  string `json:"date_task" form:"DateTask" binding:"required"`
+	StartTask string `json:"start_task" form:"StartTask" binding:"required"`
+	EndTask   string `json:"end_task" form:"EndTask" binding:"required"`
+	Category  string `json:"category" form:"Category" binding:"required"`
+}
+
 func (h handler) GetTasks(c *gin.Context) {
 
 	var tasks []model.Task
-	result := h.DB.Find(&tasks)
-	if result.Error != nil {
+
+	if result := h.DB.Find(&tasks); result.Error == nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status": http.StatusOK,
+			"data":   &tasks,
+		})
+	} else {
+		c.JSON(http.StatusNotFound, gin.H{
+			"status": http.StatusNotFound,
+			"data":   "Data tidak ada",
+		})
 		c.AbortWithError(http.StatusNotFound, result.Error)
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"data": &tasks,
-	})
 }
+
 func (h handler) GetTask(c *gin.Context) {
 	id := c.Param("id")
 	var task model.Task
-	result := h.DB.First(&task, id)
-	if result.Error != nil {
+	if result := h.DB.First(&task, id); result.Error == nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status": http.StatusOK,
+			"data":   &task,
+		})
+	} else {
+		c.JSON(http.StatusNotFound, gin.H{
+			"status": http.StatusNotFound,
+			"data":   "Data tidak ada",
+		})
 		c.AbortWithError(http.StatusNotFound, result.Error)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"data": &task,
-	})
 }
 
 func (h handler) StoreTask(c *gin.Context) {
+	req := Task{}
+
+	if err := c.ShouldBind(&req); err != nil {
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	DateTask, _ := time.Parse("2006-01-02", req.DateTask)
+
 	var task model.Task
-	DateTask, _ := time.Parse("2006-01-02", c.PostForm("date_task"))
-	StartTask, _ := time.Parse("2006-01-02 15:04", c.PostForm("start_task"))
-	EndTask, _ := time.Parse("2006-01-02 15:04", c.PostForm("end_task"))
-
-	task.TitleTask = c.PostForm("title_task")
+	task.TitleTask = req.TitleTask
 	task.DateTask = datatypes.Date(DateTask)
-	task.StartTask = StartTask
-	task.EndTask = EndTask
-	task.Category = c.PostForm("category")
+	task.StartTask = req.StartTask
+	task.EndTask = req.EndTask
+	task.Category = req.Category
 
-	if result := h.DB.Create(&task); result.Error != nil {
+	if result := h.DB.Create(&task); result.Error == nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status": http.StatusOK,
+			"data":   "Data berhasil ditambahkan",
+			"result": &task,
+		})
+	} else {
+		c.JSON(http.StatusNotFound, gin.H{
+			"status": http.StatusNotFound,
+			"data":   "Gagal menambahkan data",
+		})
 		c.AbortWithError(http.StatusNotFound, result.Error)
 		return
 	}
-	c.JSON(http.StatusCreated, &task)
 }
 
 func (h handler) UpdateTask(c *gin.Context) {
 	id := c.Param("id")
-	var task model.Task
-	DateTask, _ := time.Parse("2006-01-02", c.PostForm("date_task"))
-	StartTask, _ := time.Parse("2006-01-02 15:04", c.PostForm("start_task"))
-	EndTask, _ := time.Parse("2006-01-02 15:04", c.PostForm("end_task"))
+	req := Task{}
 
+	var task model.Task
 	if result := h.DB.First(&task, id); result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"status": http.StatusNotFound,
+			"data":   "Data tidak ada",
+		})
 		c.AbortWithError(http.StatusNotFound, result.Error)
 		return
 	}
-	task.TitleTask = c.PostForm("title_task")
-	task.DateTask = datatypes.Date(DateTask)
-	task.StartTask = StartTask
-	task.EndTask = EndTask
-	task.Category = c.PostForm("category")
-	h.DB.Save(&task)
 
-	c.JSON(http.StatusCreated, &task)
+	if err := c.ShouldBind(&req); err != nil {
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	DateTask, _ := time.Parse("2006-01-02", req.DateTask)
+
+	task.TitleTask = req.TitleTask
+	task.DateTask = datatypes.Date(DateTask)
+	task.StartTask = req.StartTask
+	task.EndTask = req.EndTask
+	task.Category = req.Category
+	if result := h.DB.Save(&task); result.Error == nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status": http.StatusOK,
+			"data":   "Berhasil mengupdate data",
+			"result": &task,
+		})
+	} else {
+		c.JSON(http.StatusNotFound, gin.H{
+			"status": http.StatusNotFound,
+			"data":   "Gagal mengupdate data",
+		})
+		c.AbortWithError(http.StatusNotFound, result.Error)
+		return
+	}
 }
 
 func (h handler) DeleteTask(c *gin.Context) {
@@ -81,10 +135,26 @@ func (h handler) DeleteTask(c *gin.Context) {
 	var task model.Task
 
 	if result := h.DB.First(&task, id); result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"status": http.StatusNotFound,
+			"data":   "Data tidak ada",
+		})
 		c.AbortWithError(http.StatusNotFound, result.Error)
 		return
 	}
-	h.DB.Delete(&task)
 
-	c.JSON(http.StatusCreated, &task)
+	if result := h.DB.Delete(&task); result.Error == nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status": http.StatusOK,
+			"data":   "Data berhasil dihapus",
+			"result": &task,
+		})
+	} else {
+		c.JSON(http.StatusNotFound, gin.H{
+			"status": http.StatusNotFound,
+			"data":   "Gagal menghapus data",
+		})
+		c.AbortWithError(http.StatusNotFound, result.Error)
+		return
+	}
 }
