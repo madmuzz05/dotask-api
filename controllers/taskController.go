@@ -35,38 +35,34 @@ func (h handler) GetTasks(c *gin.Context) {
 		"tasks":         &tasks,
 	}
 
-	if result := h.DB.Find(&tasks); result.Error == nil {
+	if result := h.DB.Preload("User").Preload("User.FriendLists", "status = ? ", "accepted").Preload("User.FriendLists.Friend").Find(&tasks); result.Error == nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  http.StatusOK,
 			"data":    data,
 			"success": "Success",
 		})
 	} else {
-		c.JSON(http.StatusNotFound, gin.H{
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
 			"status":  http.StatusNotFound,
 			"success": "Data tidak ada",
 		})
-		c.AbortWithError(http.StatusNotFound, result.Error)
-		return
 	}
 }
 
 func (h handler) GetTask(c *gin.Context) {
 	id := c.Param("id")
 	var task model.Task
-	if result := h.DB.First(&task, id); result.Error == nil {
+	if result := h.DB.Preload("User").Preload("User.FriendLists", "status = ?", "accepted").Preload("User.FriendLists.Friend").First(&task, id); result.Error == nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  http.StatusOK,
 			"data":    &task,
 			"success": "success",
 		})
 	} else {
-		c.JSON(http.StatusNotFound, gin.H{
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
 			"status":  http.StatusNotFound,
 			"success": "Data tidak ada",
 		})
-		c.AbortWithError(http.StatusNotFound, result.Error)
-		return
 	}
 
 }
@@ -75,7 +71,7 @@ func (h handler) StoreTask(c *gin.Context) {
 	req := Task{}
 
 	if err := c.ShouldBind(&req); err != nil {
-		c.JSON(http.StatusBadRequest, err.Error())
+		c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -99,12 +95,10 @@ func (h handler) StoreTask(c *gin.Context) {
 			"result":  &task,
 		})
 	} else {
-		c.JSON(http.StatusNotFound, gin.H{
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
 			"status":  http.StatusNotFound,
 			"success": "Gagal menambahkan data",
 		})
-		c.AbortWithError(http.StatusNotFound, result.Error)
-		return
 	}
 }
 
@@ -114,17 +108,15 @@ func (h handler) UpdateTask(c *gin.Context) {
 
 	var task model.Task
 	if result := h.DB.First(&task, id); result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
 			"status": http.StatusNotFound,
 			"sucess": "Data tidak ada",
 		})
-		c.AbortWithError(http.StatusNotFound, result.Error)
-		return
+
 	}
 
 	if err := c.ShouldBind(&req); err != nil {
-		c.JSON(http.StatusBadRequest, err.Error())
-		return
+		c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
 	}
 
 	DateTask, _ := time.Parse("2006-01-02", req.DateTask)
@@ -144,12 +136,10 @@ func (h handler) UpdateTask(c *gin.Context) {
 			"result":  &task,
 		})
 	} else {
-		c.JSON(http.StatusNotFound, gin.H{
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
 			"status":  http.StatusNotFound,
 			"success": "Gagal mengupdate data",
 		})
-		c.AbortWithError(http.StatusNotFound, result.Error)
-		return
 	}
 }
 
@@ -158,12 +148,10 @@ func (h handler) DeleteTask(c *gin.Context) {
 	var task model.Task
 
 	if result := h.DB.First(&task, id); result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
 			"status":  http.StatusNotFound,
 			"success": "Data tidak ada",
 		})
-		c.AbortWithError(http.StatusNotFound, result.Error)
-		return
 	}
 
 	if result := h.DB.Delete(&task); result.Error == nil {
@@ -174,11 +162,9 @@ func (h handler) DeleteTask(c *gin.Context) {
 			"result":  &task,
 		})
 	} else {
-		c.JSON(http.StatusNotFound, gin.H{
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
 			"status":  http.StatusNotFound,
 			"success": "Gagal menghapus data",
 		})
-		c.AbortWithError(http.StatusNotFound, result.Error)
-		return
 	}
 }
