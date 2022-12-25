@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -26,14 +27,19 @@ func (h handler) GetTasks(c *gin.Context) {
 	allCount := h.DB.Find(&tasks).RowsAffected
 	countSuccess := h.DB.Where("status = ?", "1").Find(&tasks).RowsAffected
 	countError := h.DB.Where("status = ?", "0").Find(&tasks).RowsAffected
+
+	data := map[string]interface{}{
+		"all_count":     allCount,
+		"count_success": countSuccess,
+		"count_error":   countError,
+		"tasks":         &tasks,
+	}
+
 	if result := h.DB.Find(&tasks); result.Error == nil {
 		c.JSON(http.StatusOK, gin.H{
-			"status":        http.StatusOK,
-			"data":          &tasks,
-			"all_count":     allCount,
-			"count_success": countSuccess,
-			"count_errror":  countError,
-			"success":       "Success",
+			"status":  http.StatusOK,
+			"data":    data,
+			"success": "Success",
 		})
 	} else {
 		c.JSON(http.StatusNotFound, gin.H{
@@ -76,12 +82,13 @@ func (h handler) StoreTask(c *gin.Context) {
 	DateTask, _ := time.Parse("2006-01-02", req.DateTask)
 
 	var task model.Task
+	status, _ := strconv.Atoi(req.Status)
 	task.TitleTask = req.TitleTask
 	task.DateTask = datatypes.Date(DateTask)
 	task.StartTask = req.StartTask
 	task.EndTask = req.EndTask
 	task.Category = req.Category
-	task.Status = req.Status
+	task.Status = status
 	task.UserID = req.UserID
 
 	if result := h.DB.Create(&task); result.Error == nil {
@@ -121,13 +128,13 @@ func (h handler) UpdateTask(c *gin.Context) {
 	}
 
 	DateTask, _ := time.Parse("2006-01-02", req.DateTask)
-
+	status, _ := strconv.Atoi(req.Status)
 	task.TitleTask = req.TitleTask
 	task.DateTask = datatypes.Date(DateTask)
 	task.StartTask = req.StartTask
 	task.EndTask = req.EndTask
 	task.Category = req.Category
-	task.Status = req.Status
+	task.Status = status
 	task.UserID = req.UserID
 	if result := h.DB.Save(&task); result.Error == nil {
 		c.JSON(http.StatusOK, gin.H{

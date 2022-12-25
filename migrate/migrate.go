@@ -7,5 +7,8 @@ import (
 
 func main() {
 	db := initialize.ConnectToDB()
-	db.AutoMigrate(&model.Task{})
+	// db.AutoMigrate(&model.Task{})
+	// db.AutoMigrate(&model.Event{})
+	db.AutoMigrate(&model.User{})
+	// db.AutoMigrate(&model.FriendList{})
 }
