@@ -35,7 +35,7 @@ func (h handler) GetEvents(c *gin.Context) {
 		"events":        &events,
 	}
 
-	if result := h.DB.Preload("User").Preload("User.FriendLists", "status = ? ", "accepted").Preload("User.FriendLists.Friend").Find(&events); result.Error == nil {
+	if result := h.DB.Preload("User").Preload("User.FriendLists", "status = ?", "accepted").Preload("User.FriendLists.Friend").Find(&events); result.Error == nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  http.StatusOK,
 			"data":    data,
@@ -53,7 +53,7 @@ func (h handler) GetEvent(c *gin.Context) {
 	id := c.Param("id")
 	var event model.Event
 
-	if result := h.DB.Preload("User").Preload("User.FriendLists", "status = ? ", "accepted").Preload("User.FriendLists.Friend").First(&event, id); result.Error == nil {
+	if result := h.DB.Preload("User").Preload("User.FriendLists", "status = ? ", "accepted").Preload("User.FriendLists.Friend").Where("user_id = ?", id).Find(&event); result.Error == nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  http.StatusOK,
 			"data":    &event,
@@ -72,6 +72,7 @@ func (h handler) StoreEvent(c *gin.Context) {
 
 	if err := c.ShouldBind(&req); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
+		return
 	}
 
 	DateEvent, _ := time.Parse("2006-01-02", req.DateEvent)
@@ -110,9 +111,11 @@ func (h handler) UpdateEvent(c *gin.Context) {
 			"status":  http.StatusNotFound,
 			"success": "Data tidak ditemukan",
 		})
+		return
 	}
 	if err := c.ShouldBind(&req); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
+		return
 	}
 
 	DateEvent, _ := time.Parse("2006-01-02", req.DateEvent)
@@ -149,6 +152,7 @@ func (h handler) DeleteEvent(c *gin.Context) {
 			"status":  http.StatusNotFound,
 			"success": "Data tidak ditemukan",
 		})
+		return
 	}
 
 	if result := h.DB.Delete(&event); result.Error == nil {

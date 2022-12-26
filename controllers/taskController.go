@@ -112,11 +112,13 @@ func (h handler) UpdateTask(c *gin.Context) {
 			"status": http.StatusNotFound,
 			"sucess": "Data tidak ada",
 		})
+		return
 
 	}
 
 	if err := c.ShouldBind(&req); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
+		return
 	}
 
 	DateTask, _ := time.Parse("2006-01-02", req.DateTask)
@@ -152,6 +154,7 @@ func (h handler) DeleteTask(c *gin.Context) {
 			"status":  http.StatusNotFound,
 			"success": "Data tidak ada",
 		})
+		return
 	}
 
 	if result := h.DB.Delete(&task); result.Error == nil {
