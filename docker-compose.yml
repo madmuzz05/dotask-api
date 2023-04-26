@@ -1,0 +1,19 @@
+
+version: '3.8'
+services:
+  dotask-db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=3drTCFvaKD
+      - POSTGRES_DB=dotask
+    ports:
+      - 5432:5432
+  bookmark-db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=3drTCFvaKD
+      - POSTGRES_DB=bookmark
+    ports:
+      - 5432:5432

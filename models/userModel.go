@@ -15,7 +15,7 @@ type User struct {
 	Phone       string         `gorm:"size:20" json:"phone"`
 	Birthday    datatypes.Date `json:"birthday"`
 	Address     string         `gorm:"size:75" json:"address"`
-	FriendLists []FriendList   `gorm:"foreignKey:UserID;references:UserID"`
+	// FriendLists []FriendList   `gorm:"foreignKey:UserID;references:UserID"`
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
 }

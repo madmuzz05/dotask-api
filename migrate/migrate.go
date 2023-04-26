@@ -10,5 +10,5 @@ func main() {
 	// db.AutoMigrate(&model.Task{})
 	// db.AutoMigrate(&model.Event{})
 	db.AutoMigrate(&model.User{})
-	// db.AutoMigrate(&model.FriendList{})
+	db.AutoMigrate(&model.FriendList{})
 }
